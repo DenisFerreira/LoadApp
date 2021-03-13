@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
+import android.graphics.drawable.shapes.ArcShape
 import android.util.AttributeSet
 import android.view.View
 import kotlin.properties.Delegates
@@ -23,12 +24,12 @@ class LoadingButton @JvmOverloads constructor(
 
 
     private var backgroud: Rect = Rect(0, 0, 0, 0)
+    private var sweepAngle: Float = 0f
     private val paint = Paint().apply {
         color = Color.GREEN
     }
     private val textPaint = Paint().apply {
         color = Color.BLACK
-        bold
         textSize = 50f
         textAlign = Paint.Align.CENTER
     }
@@ -44,7 +45,10 @@ class LoadingButton @JvmOverloads constructor(
         canvas?.drawRect(backgroud, paint)
         val xPos = (width / 2 - (textPaint.descent() + textPaint.ascent()) / 2)
         val yPos = (height / 2 - (textPaint.descent() + textPaint.ascent()) / 2)
-        canvas?.drawText(context.getString(R.string.download_btn_label), xPos, yPos,  textPaint)
+        canvas?.drawText(context.getString(R.string.download_btn_label), xPos, yPos, textPaint)
+        val xCPos = xPos + (width / 4f)
+        val yCPos = height / 4f
+        canvas?.drawArc(xCPos, yCPos, xCPos + 100f, yCPos + 100f, 0f, sweepAngle, true, textPaint)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -60,15 +64,9 @@ class LoadingButton @JvmOverloads constructor(
         setMeasuredDimension(w, h)
     }
 
-    override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
-
-
-    }
-
     override fun performClick(): Boolean {
+        super.performClick()
         runAnimations()
-        //  Redraw the view
-        invalidate()
         return true
     }
 
@@ -78,12 +76,14 @@ class LoadingButton @JvmOverloads constructor(
                 duration = 2000
                 addUpdateListener {
                     backgroud = Rect(0, 0, it.animatedValue as Int, height)
+                    sweepAngle = (it.animatedValue as Int).toFloat() * 360f / width.toFloat()
                     invalidate()
                 }
                 addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator?) {
                         super.onAnimationEnd(animation)
                         backgroud = Rect(0, 0, 0, 0)
+                        sweepAngle = 0f
                         invalidate()
                     }
                 })
